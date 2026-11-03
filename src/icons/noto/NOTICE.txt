@@ -1,0 +1,4 @@
+Fruit pictures: Noto Emoji by Google, https://github.com/googlefonts/noto-emoji
+(2D/svg, commit 99701e07d3d1fe1bdbcdb14964547f0fd592966f, fetched 2026-11-03). Licensed under the Apache License,
+Version 2.0; see LICENSE (the copyright notice) and LICENSE-2.0.txt (full text) in this folder. Files are unmodified, only renamed
+(for example emoji_u1f34b.svg is lemon.svg).

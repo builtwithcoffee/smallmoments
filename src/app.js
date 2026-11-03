@@ -1,8 +1,16 @@
+import { iconNames, tileIcon } from './icons.js';
 import { DIFFICULTIES, createGame, restoreGame, selectTile, hideMismatch, canPause, pauseGame, resumeGame } from './game.js';
 import { createClock } from './clock.js';
 import { utcDate, seedFor, createSeededRandom, dailyLabel, msUntilNextPuzzle, formatCountdown, loadDailyEntry, saveDailyProgress, saveDailyResult, loadDailyStats, currentStreak, formatResult } from './daily.js';
 import { loadBestScore, isBetterScore, saveBestScore, loadDifficulty, saveDifficulty } from './best-score.js';
 import { createSoundPlayer, loadSoundEnabled, saveSoundEnabled, soundsFor } from './sound.js';
+
+// Keep the images alive and request every fruit once, before the first flip.
+const fruitImages = iconNames.map(name => {
+  const image = new Image();
+  image.src = `src/icons/noto/${name.toLowerCase()}.svg`;
+  return image;
+});
 
 const board = document.querySelector('#board');
 const status = document.querySelector('#status');
@@ -75,7 +83,7 @@ function render() {
     const revealed = !game.paused && (tile.matched || game.selected.includes(index));
     button.classList.toggle('revealed', revealed);
     button.classList.toggle('matched', !game.paused && tile.matched);
-    button.textContent = revealed ? tile.symbol : '✳︎';
+    button.innerHTML = tileIcon(revealed ? tile.name : 'face-down');
     button.setAttribute('aria-label', `Tile ${index + 1}: ${revealed ? tile.name : 'face down'}${!game.paused && tile.matched ? ', matched' : ''}`);
     button.setAttribute('aria-disabled', String(game.paused || tile.matched || game.locked || revealed));
   });

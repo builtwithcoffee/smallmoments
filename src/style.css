@@ -45,10 +45,11 @@ button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparen
 .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .board[data-difficulty="hard"] { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
 .board[data-difficulty="hard"] .tile { min-width: 0; padding: 0; border-radius: 8px; font-size: clamp(24px, 5vw, 36px); }
-.tile { aspect-ratio: 1; border: 1px solid #244d42; border-radius: 15px; background: #234d40; color: #bdd1a8; font-size: clamp(26px, 5vw, 42px); box-shadow: 0 3px 0 #14372d; transition: background 180ms, transform 180ms, box-shadow 180ms; }
+.tile { display: grid; place-items: center; padding: 0; aspect-ratio: 1; border: 1px solid #244d42; border-radius: 15px; background: #234d40; color: #bdd1a8; font-size: clamp(26px, 5vw, 42px); box-shadow: 0 3px 0 #14372d; transition: background 180ms, transform 180ms, box-shadow 180ms; }
+.tile-icon { display: block; width: 65%; height: auto; aspect-ratio: 1; pointer-events: none; user-select: none; -webkit-user-select: none; object-fit: contain; }
 .tile:hover:not([aria-disabled="true"]) { background: #32634f; transform: translateY(-3px); }
 .tile.revealed { background: #fffdf6; border-color: #c8d0ba; box-shadow: 0 3px 0 #d8ddcb; }
-.tile.matched { background: #e7edda; border-color: #bbcca2; box-shadow: none; }
+.tile.matched { background: #bcd8cb; border-color: #7fae99; box-shadow: none; }
 .tile[aria-disabled="true"] { cursor: default; }
 button:focus-visible, a:focus-visible { outline: 3px solid #ab5a2d; outline-offset: 4px; }
 .status { min-height: 42px; margin: 20px 0 8px; text-align: center; font-size: 13px; color: #52684c; line-height: 1.6; }
@@ -70,3 +71,8 @@ footer span:last-child { letter-spacing: 0; font-size: 12px; font-weight: 400; }
   footer { flex-direction: column; text-align: center; gap: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
+
+/* Scale the complete page only on very wide screens. */
+@media (min-width: 2800px) { main { zoom: 1.2; } }
+@media (min-width: 3200px) { main { zoom: 1.4; } }
+@media (min-width: 3800px) { main { zoom: 1.6; } }
