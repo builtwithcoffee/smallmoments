@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#183c35">
+  <meta name="description" content="A little pause for your mind. Find matching pairs on an Easy 4 by 4 or Hard 6 by 6 memory board.">
+  <title>Small Moments · Memory Game</title>
+  <link rel="stylesheet" href="src/style.css">
+  <script type="module" src="src/app.js"></script>
+</head>
+<body>
+  <main>
+    <header><a class="brand" href="./"><svg class="brand-mark" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/></g></svg><span>SMALL MOMENTS</span></a><span class="edition">01 / MEMORY</span></header>
+    <section class="intro" aria-labelledby="title">
+      <h1 id="title">Find your match.</h1>
+      <p>Turn over two tiles and find a pair. A little pause for your mind.</p>
+    </section>
+    <section class="game" aria-label="Memory game">
+      <div class="stats">
+        <div><span class="label">PAIRS</span><strong><span id="pairs">0</span><small> / <span id="pair-total">8</span></small></strong></div>
+        <div><span class="label">MOVES</span><strong id="moves">0</strong></div>
+        <div><span class="label">TIME</span><strong id="time">0:00</strong></div>
+        <div class="game-controls">
+          <button id="restart" class="restart" type="button" hidden>↻ <span>New game</span></button>
+          <button id="pause-toggle" class="pause-toggle" type="button" aria-pressed="false" disabled>Pause</button>
+          <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button>
+        </div>
+      </div>
+      <div class="mode" role="group" aria-label="Mode">
+        <button id="mode-daily" type="button" title="Dates are UTC" aria-pressed="true">Daily</button>
+        <button id="mode-random" type="button" aria-pressed="false">Free play</button>
+      </div>
+      <div class="difficulty" role="group" aria-label="Difficulty">
+        <button id="difficulty-easy" type="button" aria-pressed="true">Easy 4×4</button>
+        <button id="difficulty-hard" type="button" aria-pressed="false">Hard 6×6</button>
+      </div>
+      <div id="result-card" class="result-card" aria-labelledby="result-title" hidden>
+        <h2 id="result-title">Your result</h2>
+        <p id="result-text" class="result-text"></p>
+        <p id="result-caption" class="result-caption">This is what Copy result puts on your clipboard.</p>
+        <button id="copy-result" class="copy-result" type="button">Copy result</button>
+        <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
+      </div>
+      <div id="board" class="board" role="group" aria-label="4 by 4 board, 16 tiles"></div>
+      <p id="status" class="status" role="status" aria-live="polite">Pick any tile to begin.</p>
+      <p id="daily-info" class="daily-info">A new puzzle every day at 00:00 UTC.</p>
+      <p id="next-puzzle" class="next-puzzle" hidden></p>
+      <p class="best-score"><span id="best-label">Best</span> (<span id="best-difficulty">Easy</span>): <span id="best-moves">—</span> moves · <span id="best-time">—</span></p>
+      <p id="daily-stats" class="daily-stats" hidden></p>
+    </section>
+    <footer><span id="pair-summary">8 PAIRS. ONE SMALL MOMENT.</span><span>Take your time. There’s no rush.</span></footer>
+  </main>
+</body>
+</html>
