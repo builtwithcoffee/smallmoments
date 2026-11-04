@@ -28,12 +28,20 @@
         </div>
       </div>
       <div class="mode" role="group" aria-label="Mode">
-        <button id="mode-daily" type="button" title="Dates are UTC" aria-pressed="true">Daily</button>
+        <button id="mode-daily" type="button" title="Dates are in Eastern time" aria-pressed="true">Daily</button>
         <button id="mode-random" type="button" aria-pressed="false">Free play</button>
       </div>
       <div class="difficulty" role="group" aria-label="Difficulty">
         <button id="difficulty-easy" type="button" aria-pressed="true">Easy 4×4</button>
         <button id="difficulty-hard" type="button" aria-pressed="false">Hard 6×6</button>
+      </div>
+      <div id="timezone-area" class="timezone-area">
+        <p id="daily-info" class="daily-info">A new puzzle every day at midnight Eastern time.</p>
+        <div class="timezone" role="group" aria-label="Daily time zone">
+          <button id="timezone-eastern" type="button" aria-pressed="true">Eastern time</button>
+          <button id="timezone-local" type="button" aria-pressed="false">My time zone</button>
+        </div>
+        <p id="practice-note" class="daily-info" hidden>Practice: this game doesn't count.</p>
       </div>
       <div id="result-card" class="result-card" aria-labelledby="result-title" hidden>
         <h2 id="result-title">Your result</h2>
@@ -44,7 +52,6 @@
       </div>
       <div id="board" class="board" role="group" aria-label="4 by 4 board, 16 tiles"></div>
       <p id="status" class="status" role="status" aria-live="polite">Pick any tile to begin.</p>
-      <p id="daily-info" class="daily-info">A new puzzle every day at 00:00 UTC.</p>
       <p id="next-puzzle" class="next-puzzle" hidden></p>
       <p class="best-score"><span id="best-label">Best</span> (<span id="best-difficulty">Easy</span>): <span id="best-moves">—</span> moves · <span id="best-time">—</span></p>
       <p id="daily-stats" class="daily-stats" hidden></p>

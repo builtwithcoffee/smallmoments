@@ -1,7 +1,8 @@
 # Memory game
 
 A small browser memory game with Easy and Hard boards, a Random mode and a
-Daily mode (the same board for everyone on each UTC day). Plain HTML, CSS and
+Daily mode (the same board for everyone with the same calendar date in their
+selected time zone; Eastern time by default). Plain HTML, CSS and
 JavaScript: no build step, no dependencies, no server.
 
 Open `index.html` through any static web server, or publish this folder with

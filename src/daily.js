@@ -1,11 +1,79 @@
 import { DIFFICULTIES, createGame } from './game.js';
+import { BEST_SCORE_KEY, bestScoreKey } from './best-score.js';
 
 export const EPOCH_DATE = '2026-11-01';
 export const STATS_KEY = 'memory-game.daily-stats';
 export const TODAY_KEY = 'memory-game.daily-today';
+export const HISTORY_KEY = 'memory-game.daily-history';
+export const DATA_VERSION_KEY = 'memory-game.data-version';
+export const DATA_VERSION = '2026-11-04-fresh';
+
+export function resetGameData(storage, version = DATA_VERSION) {
+  try {
+    storage ??= globalThis.localStorage;
+    if (storage.getItem(DATA_VERSION_KEY) === version) return false;
+    for (const key of [STATS_KEY, TODAY_KEY, HISTORY_KEY, BEST_SCORE_KEY, bestScoreKey('hard')]) {
+      storage.removeItem(key);
+    }
+    // Mark success only after every game key was removed, so a failed reset retries.
+    storage.setItem(DATA_VERSION_KEY, version);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function utcDate(now = new Date()) {
   return `${String(now.getUTCFullYear()).padStart(4, '0')}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+}
+
+export const EASTERN_ZONE = 'America/New_York';
+export const TIMEZONE_KEY = 'memory-game.timezone';
+const dateFormatters = new Map();
+
+function dateFormatter(zone) {
+  if (typeof zone !== 'string') zone = EASTERN_ZONE;
+  if (dateFormatters.has(zone)) return dateFormatters.get(zone);
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: zone, calendar: 'gregory', numberingSystem: 'latn',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    });
+    dateFormatters.set(zone, formatter);
+    return formatter;
+  } catch {
+    return dateFormatter(EASTERN_ZONE);
+  }
+}
+
+export function zoneDate(now = new Date(), zone = EASTERN_ZONE) {
+  const parts = Object.fromEntries(dateFormatter(zone).formatToParts(now).map(part => [part.type, part.value]));
+  return `${parts.year.padStart(4, '0')}-${parts.month}-${parts.day}`;
+}
+
+export function resolveZone(choice) {
+  if (choice === 'local') {
+    try {
+      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (typeof zone === 'string' && zone) {
+        new Intl.DateTimeFormat('en-US', { timeZone: zone });
+        return zone;
+      }
+    } catch { /* Detection is optional; Eastern is always the default. */ }
+  }
+  return EASTERN_ZONE;
+}
+
+export function loadZoneChoice(storage) {
+  try { return (storage ?? globalThis.localStorage).getItem(TIMEZONE_KEY) === 'local' ? 'local' : 'eastern'; }
+  catch { return 'eastern'; }
+}
+
+export function saveZoneChoice(choice, storage) {
+  const value = choice === 'local' ? 'local' : 'eastern';
+  try { (storage ?? globalThis.localStorage).setItem(TIMEZONE_KEY, value); }
+  catch { /* The app retains its selected choice for this page visit. */ }
+  return value;
 }
 
 export function seedFor(date, difficulty) {
@@ -118,15 +186,19 @@ export function currentStreak(stats, today) {
 }
 
 function todayRecord(date) {
-  const record = read(TODAY_KEY);
+  let record = read(TODAY_KEY);
   const today = { date };
+  if (!object(record) || record.date !== date) {
+    const history = read(HISTORY_KEY);
+    record = object(history) && Object.hasOwn(history, date) ? history[date] : null;
+  }
   if (!object(record) || record.date !== date) return today;
   for (const difficulty of ['easy', 'hard']) {
     const entry = record[difficulty];
     if (!object(entry)) continue;
-    if (entry.status === 'playing' && validProgress(entry, difficulty, date)) {
+    if (['playing', 'forfeited'].includes(entry.status) && validProgress(entry, difficulty, date)) {
       const { moves, strip, elapsedMs, matched, selected } = entry;
-      today[difficulty] = { status: 'playing', moves, strip, elapsedMs, matched: [...matched], selected: [...selected] };
+      today[difficulty] = { status: entry.status, moves, strip, elapsedMs, matched: [...matched], selected: [...selected] };
     }
     if (entry.status === 'done' && validResult(entry, difficulty)) {
       const { moves, elapsedMs, strip } = entry;
@@ -134,6 +206,24 @@ function todayRecord(date) {
     }
   }
   return today;
+}
+
+function writeDailyRecord(record) {
+  const previous = read(TODAY_KEY);
+  if (object(previous) && validDate(previous.date) && previous.date !== record.date) {
+    const history = read(HISTORY_KEY);
+    write(HISTORY_KEY, { ...(object(history) ? history : {}), [previous.date]: todayRecord(previous.date) });
+  }
+  write(TODAY_KEY, record);
+}
+
+// Only an explicit time-zone change forfeits a playing official attempt.
+// Keep its snapshot for history; later play on this slot is unscored practice.
+export function forfeitDailyEntry(difficulty, date) {
+  const record = todayRecord(date);
+  if (record[difficulty]?.status !== 'playing') return;
+  record[difficulty].status = 'forfeited';
+  writeDailyRecord(record);
 }
 
 export function loadDailyEntry(difficulty, date) {
@@ -144,18 +234,18 @@ export function saveDailyProgress({ difficulty, date, moves, elapsedMs, strip, m
   const progress = { moves, strip, elapsedMs, matched, selected };
   if (!validDate(date) || !validProgress(progress, difficulty, date)) return;
   const record = todayRecord(date);
-  if (record[difficulty]?.status === 'done') return;
+  if (['done', 'forfeited'].includes(record[difficulty]?.status)) return;
   record[difficulty] = { status: 'playing', ...progress, matched: [...matched], selected: [...selected] };
-  write(TODAY_KEY, record);
+  writeDailyRecord(record);
 }
 
 export function saveDailyResult({ difficulty, date, moves, elapsedMs, strip }) {
   const result = { moves, elapsedMs, strip };
   if (!validDate(date) || !validResult(result, difficulty)) return;
   const record = todayRecord(date);
-  if (record[difficulty]?.status === 'done') return;
+  if (['done', 'forfeited'].includes(record[difficulty]?.status)) return;
   record[difficulty] = { status: 'done', ...result };
-  write(TODAY_KEY, record);
+  writeDailyRecord(record);
   const stats = loadDailyStats(difficulty);
   if (stats.lastDate !== null && date <= stats.lastDate) return;
   const streak = stats.lastDate === previousDate(date) ? stats.streak + 1 : 1;
@@ -183,8 +273,20 @@ export function dailyLabel(date) {
   return `Daily #${puzzleNumber(date)} · ${formatDay(date)}`;
 }
 
-export function msUntilNextPuzzle(now = new Date()) {
-  return Date.parse(`${utcDate(now)}T00:00:00Z`) + 86400000 - now.getTime();
+export function msUntilNextPuzzle(now = new Date(), zone = EASTERN_ZONE) {
+  const today = zoneDate(now, zone);
+  const start = now.getTime();
+  // Bracket the next calendar date before searching for its first instant.
+  // Civil days can exceed 25 hours, including Troll's 26-hour autumn day.
+  let low = start;
+  let high = start + 24 * 3600000;
+  while (zoneDate(new Date(high), zone) === today) high += 3600000;
+  while (high - low > 1) {
+    const middle = Math.floor((low + high) / 2);
+    if (zoneDate(new Date(middle), zone) === today) low = middle;
+    else high = middle;
+  }
+  return high - start;
 }
 
 export function formatCountdown(ms) {
