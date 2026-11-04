@@ -21,28 +21,24 @@
         <div><span class="label">PAIRS</span><strong><span id="pairs">0</span><small> / <span id="pair-total">8</span></small></strong></div>
         <div><span class="label">MOVES</span><strong id="moves">0</strong></div>
         <div><span class="label">TIME</span><strong id="time">0:00</strong></div>
-        <div class="game-controls">
-          <button id="restart" class="restart" type="button" hidden>↻ <span>New game</span></button>
-          <button id="pause-toggle" class="pause-toggle" type="button" aria-pressed="false" disabled>Pause</button>
-          <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">Sound on</button>
-        </div>
       </div>
       <div class="mode" role="group" aria-label="Mode">
-        <button id="mode-daily" type="button" title="Dates are in Eastern time" aria-pressed="true">Daily</button>
+        <button id="mode-daily" type="button" title="Dates are in your time zone" aria-pressed="true">Daily</button>
         <button id="mode-random" type="button" aria-pressed="false">Free play</button>
       </div>
-      <div class="difficulty" role="group" aria-label="Difficulty">
-        <button id="difficulty-easy" type="button" aria-pressed="true">Easy 4×4</button>
-        <button id="difficulty-hard" type="button" aria-pressed="false">Hard 6×6</button>
-      </div>
-      <div id="timezone-area" class="timezone-area">
-        <p id="daily-info" class="daily-info">A new puzzle every day at midnight Eastern time.</p>
-        <div class="timezone" role="group" aria-label="Daily time zone">
-          <button id="timezone-eastern" type="button" aria-pressed="true">Eastern time</button>
-          <button id="timezone-local" type="button" aria-pressed="false">My time zone</button>
+      <div class="controls-row">
+        <div class="difficulty" role="group" aria-label="Difficulty">
+          <button id="difficulty-easy" type="button" aria-pressed="true">Easy 4×4</button>
+          <button id="difficulty-hard" type="button" aria-pressed="false">Hard 6×6</button>
         </div>
-        <p id="practice-note" class="daily-info" hidden>Practice: this game doesn't count.</p>
+        <div class="game-controls" role="group" aria-label="Game controls">
+          <button id="restart" class="restart icon-button" type="button" aria-label="New game" title="New game" hidden><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 8a8 8 0 1 0 1 8M19 3v5h-5"/></svg></button>
+          <button id="pause-toggle" class="pause-toggle icon-button" type="button" aria-label="Pause" title="Pause" aria-pressed="false" disabled><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14M16 5v14" stroke-width="3"/></svg></button>
+          <button id="sound-toggle" class="sound-toggle icon-button" type="button" aria-label="Sound on" title="Sound on" aria-pressed="true"><svg class="control-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h4l6-5v16l-6-5H3Z"/><path d="M16 8q4 4 0 8m3-11q7 7 0 14"/></svg></button>
+        </div>
       </div>
+      <p id="daily-info" class="daily-info">A new puzzle every day at midnight.</p>
+      <p id="practice-note" class="daily-info" hidden>Practice: this game doesn't count.</p>
       <div id="result-card" class="result-card" aria-labelledby="result-title" hidden>
         <h2 id="result-title">Your result</h2>
         <p id="result-text" class="result-text"></p>
@@ -55,6 +51,13 @@
       <p id="next-puzzle" class="next-puzzle" hidden></p>
       <p class="best-score"><span id="best-label">Best</span> (<span id="best-difficulty">Easy</span>): <span id="best-moves">—</span> moves · <span id="best-time">—</span></p>
       <p id="daily-stats" class="daily-stats" hidden></p>
+      <details id="timezone-area" class="timezone-area">
+        <summary id="timezone-summary">Time zone</summary>
+        <div class="timezone" role="group" aria-label="Daily time zone">
+          <button id="timezone-local" type="button" aria-pressed="true">My time zone</button>
+          <button id="timezone-eastern" type="button" aria-pressed="false">Eastern time</button>
+        </div>
+      </details>
     </section>
     <footer><span id="pair-summary">8 PAIRS. ONE SMALL MOMENT.</span><span>Take your time. There’s no rush.</span></footer>
   </main>

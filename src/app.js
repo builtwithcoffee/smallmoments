@@ -1,4 +1,4 @@
-import { iconNames, tileIcon } from './icons.js';
+import { iconNames, tileIcon, controlIcon } from './icons.js';
 import { DIFFICULTIES, createGame, restoreGame, selectTile, hideMismatch, canPause, pauseGame, resumeGame } from './game.js';
 import { createClock } from './clock.js';
 import { resetGameData, zoneDate, resolveZone, loadZoneChoice, saveZoneChoice, seedFor, createSeededRandom, dailyLabel, msUntilNextPuzzle, formatCountdown, loadDailyEntry, saveDailyProgress, saveDailyResult, forfeitDailyEntry, loadDailyStats, currentStreak, formatResult } from './daily.js';
@@ -27,6 +27,7 @@ const bestDifficulty = document.querySelector('#best-difficulty');
 const bestScoreLine = document.querySelector('.best-score');
 const dailyInfo = document.querySelector('#daily-info');
 const practiceNote = document.querySelector('#practice-note');
+const timezoneSummary = document.querySelector('#timezone-summary');
 const timezoneArea = document.querySelector('#timezone-area');
 const timezoneButtons = {
   eastern: document.querySelector('#timezone-eastern'),
@@ -79,9 +80,15 @@ function updateTime() {
   time.textContent = formatTime(clock.elapsed());
 }
 
+function renderControl(button, label, icon) {
+  button.innerHTML = controlIcon(icon);
+  button.setAttribute('aria-label', label);
+  button.title = label;
+}
+
 function render() {
   pauseToggle.disabled = !game.paused && !canPause(game);
-  pauseToggle.textContent = game.paused ? 'Resume' : 'Pause';
+  renderControl(pauseToggle, game.paused ? 'Resume' : 'Pause', game.paused ? 'play' : 'pause');
   pauseToggle.setAttribute('aria-pressed', String(game.paused));
   board.setAttribute('data-paused', String(game.paused));
   moves.textContent = game.moves;
@@ -168,9 +175,8 @@ function renderDaily() {
   copyStatus.textContent = '';
   const daily = mode === 'daily';
   dailyInfo.hidden = dailyStats.hidden = timezoneArea.hidden = !daily;
-  dailyInfo.textContent = zoneChoice === 'local'
-    ? `A new puzzle every day at midnight in your time zone (${zone}).`
-    : 'A new puzzle every day at midnight Eastern time.';
+  dailyInfo.textContent = 'A new puzzle every day at midnight.';
+  timezoneSummary.textContent = `Time zone: ${zone}`;
   modeButtons.daily.title = zoneChoice === 'local' ? `Dates are in your time zone (${zone})` : 'Dates are in Eastern time';
   for (const [value, button] of Object.entries(timezoneButtons)) {
     button.setAttribute('aria-pressed', String(value === zoneChoice));
@@ -315,7 +321,7 @@ pauseToggle.addEventListener('click', () => {
   render();
 });
 function renderSoundToggle() {
-  soundToggle.textContent = soundPlayer.enabled ? 'Sound on' : 'Sound off';
+  renderControl(soundToggle, soundPlayer.enabled ? 'Sound on' : 'Sound off', soundPlayer.enabled ? 'sound-on' : 'sound-off');
   soundToggle.setAttribute('aria-pressed', String(soundPlayer.enabled));
 }
 soundToggle.addEventListener('click', () => {
@@ -323,5 +329,6 @@ soundToggle.addEventListener('click', () => {
   saveSoundEnabled(soundPlayer.enabled);
   renderSoundToggle();
 });
+renderControl(restartButton, 'New game', 'restart');
 renderSoundToggle();
 restart();

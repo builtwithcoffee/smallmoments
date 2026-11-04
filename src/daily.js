@@ -65,8 +65,8 @@ export function resolveZone(choice) {
 }
 
 export function loadZoneChoice(storage) {
-  try { return (storage ?? globalThis.localStorage).getItem(TIMEZONE_KEY) === 'local' ? 'local' : 'eastern'; }
-  catch { return 'eastern'; }
+  try { return (storage ?? globalThis.localStorage).getItem(TIMEZONE_KEY) === 'eastern' ? 'eastern' : 'local'; }
+  catch { return 'local'; }
 }
 
 export function saveZoneChoice(choice, storage) {
