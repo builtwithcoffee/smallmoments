@@ -1,7 +1,7 @@
 import { iconNames, tileIcon, controlIcon } from './icons.js';
 import { DIFFICULTIES, createGame, restoreGame, selectTile, hideMismatch, canPause, pauseGame, resumeGame } from './game.js';
 import { createClock } from './clock.js';
-import { resetGameData, zoneDate, resolveZone, loadZoneChoice, saveZoneChoice, seedFor, createSeededRandom, dailyLabel, msUntilNextPuzzle, formatCountdown, loadDailyEntry, saveDailyProgress, saveDailyResult, forfeitDailyEntry, loadDailyStats, currentStreak, formatResult } from './daily.js';
+import { resetGameData, zoneDate, resolveZone, seedFor, createSeededRandom, dailyLabel, msUntilNextPuzzle, formatCountdown, loadDailyEntry, saveDailyProgress, saveDailyResult, loadDailyStats, currentStreak, formatResult } from './daily.js';
 import { loadBestScore, isBetterScore, saveBestScore, loadDifficulty, saveDifficulty } from './best-score.js';
 import { createSoundPlayer, loadSoundEnabled, saveSoundEnabled, soundsFor } from './sound.js';
 
@@ -26,15 +26,7 @@ const pairSummary = document.querySelector('#pair-summary');
 const bestDifficulty = document.querySelector('#best-difficulty');
 const bestScoreLine = document.querySelector('.best-score');
 const dailyInfo = document.querySelector('#daily-info');
-const practiceNote = document.querySelector('#practice-note');
-const timezoneSummary = document.querySelector('#timezone-summary');
-const timezoneArea = document.querySelector('#timezone-area');
-const timezoneButtons = {
-  eastern: document.querySelector('#timezone-eastern'),
-  local: document.querySelector('#timezone-local'),
-};
-let zoneChoice = loadZoneChoice();
-let zone = resolveZone(zoneChoice);
+const zone = resolveZone();
 const today = () => zoneDate(new Date(), zone);
 const nextPuzzle = document.querySelector('#next-puzzle');
 const restartButton = document.querySelector('#restart');
@@ -138,14 +130,13 @@ function choose(index) {
     clearInterval(timer);
     const score = { moves: game.moves, elapsedMs: clock.elapsed() };
     time.textContent = formatTime(score.elapsedMs);
-    if (mode === 'daily' && slot !== 'forfeited') {
+    if (mode === 'daily') {
       saveDailyResult({ date: gameDate, difficulty, ...score, strip });
       slot = 'done';
       clock.restore(score.elapsedMs);
       renderDaily();
       countdownTimer = setInterval(updateCountdown, 60000);
-    } else if (mode === 'daily') {
-      clock.restore(score.elapsedMs);
+
     } else if (isBetterScore(score, bestScores[difficulty])) {
       bestScores[difficulty] = score;
       saveBestScore(score, difficulty);
@@ -157,7 +148,7 @@ function choose(index) {
 }
 
 function saveProgress() {
-  if (mode !== 'daily' || ['done', 'forfeited'].includes(slot) || !game || (slot === 'new' && game.selected.length === 0)) return;
+  if (mode !== 'daily' || slot === 'done' || !game || (slot === 'new' && game.selected.length === 0)) return;
   slot = 'playing';
   saveDailyProgress({ difficulty, date: gameDate, moves: game.moves, elapsedMs: clock.elapsed(), strip,
     matched: game.tiles.flatMap((tile, index) => tile.matched ? [index] : []),
@@ -174,14 +165,8 @@ function renderDaily() {
   resultVersion++;
   copyStatus.textContent = '';
   const daily = mode === 'daily';
-  dailyInfo.hidden = dailyStats.hidden = timezoneArea.hidden = !daily;
+  dailyInfo.hidden = dailyStats.hidden = !daily;
   dailyInfo.textContent = 'A new puzzle every day at midnight.';
-  timezoneSummary.textContent = `Time zone: ${zone}`;
-  modeButtons.daily.title = zoneChoice === 'local' ? `Dates are in your time zone (${zone})` : 'Dates are in Eastern time';
-  for (const [value, button] of Object.entries(timezoneButtons)) {
-    button.setAttribute('aria-pressed', String(value === zoneChoice));
-  }
-  practiceNote.hidden = !daily || slot !== 'forfeited';
   restartButton.hidden = daily;
   gameControls.setAttribute('data-mode', mode);
   bestScoreLine.hidden = daily;
@@ -206,10 +191,10 @@ function restart() {
   gameDate = today();
   const entry = mode === 'daily' ? loadDailyEntry(difficulty, gameDate) : null;
   slot = entry?.status ?? 'new';
-  strip = slot === 'forfeited' ? '' : entry?.strip ?? '';
+  strip = entry?.strip ?? '';
   if (mode !== 'daily' && !Object.hasOwn(bestScores, difficulty)) bestScores[difficulty] = loadBestScore(difficulty);
   game = createGame(mode === 'daily' ? createSeededRandom(seedFor(gameDate, difficulty)) : Math.random, pairCount);
-  if (entry && slot !== 'forfeited') {
+  if (entry) {
     restoreGame(game, entry.status === 'done' ? {
       matched: game.tiles.map((_, index) => index), selected: [], moves: entry.moves,
     } : entry);
@@ -241,7 +226,6 @@ function restart() {
   updateTime();
   render();
   status.textContent = game.paused ? 'Paused. Press Resume to continue.'
-    : mode === 'daily' && slot === 'forfeited' ? "Practice: this game doesn't count."
     : mode === 'daily' && slot === 'done' ? "Today's puzzle is done. Come back tomorrow, or try Free play." : 'Pick any tile to begin.';
 }
 
@@ -259,17 +243,6 @@ for (const [value, button] of Object.entries(difficultyButtons)) {
     saveProgress();
     difficulty = value;
     saveDifficulty(difficulty);
-    restart();
-  });
-}
-for (const [value, button] of Object.entries(timezoneButtons)) {
-  button.addEventListener('click', () => {
-    if (value === zoneChoice || mode !== 'daily') return;
-    saveProgress();
-    if (slot === 'playing') forfeitDailyEntry(difficulty, gameDate);
-    zoneChoice = value;
-    zone = resolveZone(zoneChoice);
-    saveZoneChoice(zoneChoice);
     restart();
   });
 }

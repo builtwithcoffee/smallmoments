@@ -6,7 +6,7 @@ export const STATS_KEY = 'memory-game.daily-stats';
 export const TODAY_KEY = 'memory-game.daily-today';
 export const HISTORY_KEY = 'memory-game.daily-history';
 export const DATA_VERSION_KEY = 'memory-game.data-version';
-export const DATA_VERSION = '2026-11-04-fresh';
+export const DATA_VERSION = "build-2026-11-04T14:28:37.666Z-19d9c78b-9812-465f-876e-df031382c27d";
 
 export function resetGameData(storage, version = DATA_VERSION) {
   try {
@@ -28,7 +28,6 @@ export function utcDate(now = new Date()) {
 }
 
 export const EASTERN_ZONE = 'America/New_York';
-export const TIMEZONE_KEY = 'memory-game.timezone';
 const dateFormatters = new Map();
 
 function dateFormatter(zone) {
@@ -51,29 +50,15 @@ export function zoneDate(now = new Date(), zone = EASTERN_ZONE) {
   return `${parts.year.padStart(4, '0')}-${parts.month}-${parts.day}`;
 }
 
-export function resolveZone(choice) {
-  if (choice === 'local') {
-    try {
-      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (typeof zone === 'string' && zone) {
-        new Intl.DateTimeFormat('en-US', { timeZone: zone });
-        return zone;
-      }
-    } catch { /* Detection is optional; Eastern is always the default. */ }
-  }
+export function resolveZone() {
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (typeof zone === 'string' && zone) {
+      new Intl.DateTimeFormat('en-US', { timeZone: zone });
+      return zone;
+    }
+  } catch { /* Use Eastern only when device-zone detection is unavailable. */ }
   return EASTERN_ZONE;
-}
-
-export function loadZoneChoice(storage) {
-  try { return (storage ?? globalThis.localStorage).getItem(TIMEZONE_KEY) === 'eastern' ? 'eastern' : 'local'; }
-  catch { return 'local'; }
-}
-
-export function saveZoneChoice(choice, storage) {
-  const value = choice === 'local' ? 'local' : 'eastern';
-  try { (storage ?? globalThis.localStorage).setItem(TIMEZONE_KEY, value); }
-  catch { /* The app retains its selected choice for this page visit. */ }
-  return value;
 }
 
 export function seedFor(date, difficulty) {
@@ -196,7 +181,7 @@ function todayRecord(date) {
   for (const difficulty of ['easy', 'hard']) {
     const entry = record[difficulty];
     if (!object(entry)) continue;
-    if (['playing', 'forfeited'].includes(entry.status) && validProgress(entry, difficulty, date)) {
+    if (entry.status === 'playing' && validProgress(entry, difficulty, date)) {
       const { moves, strip, elapsedMs, matched, selected } = entry;
       today[difficulty] = { status: entry.status, moves, strip, elapsedMs, matched: [...matched], selected: [...selected] };
     }
@@ -217,15 +202,6 @@ function writeDailyRecord(record) {
   write(TODAY_KEY, record);
 }
 
-// Only an explicit time-zone change forfeits a playing official attempt.
-// Keep its snapshot for history; later play on this slot is unscored practice.
-export function forfeitDailyEntry(difficulty, date) {
-  const record = todayRecord(date);
-  if (record[difficulty]?.status !== 'playing') return;
-  record[difficulty].status = 'forfeited';
-  writeDailyRecord(record);
-}
-
 export function loadDailyEntry(difficulty, date) {
   return todayRecord(date)[difficulty] ?? null;
 }
@@ -234,7 +210,7 @@ export function saveDailyProgress({ difficulty, date, moves, elapsedMs, strip, m
   const progress = { moves, strip, elapsedMs, matched, selected };
   if (!validDate(date) || !validProgress(progress, difficulty, date)) return;
   const record = todayRecord(date);
-  if (['done', 'forfeited'].includes(record[difficulty]?.status)) return;
+  if (record[difficulty]?.status === 'done') return;
   record[difficulty] = { status: 'playing', ...progress, matched: [...matched], selected: [...selected] };
   writeDailyRecord(record);
 }
@@ -243,7 +219,7 @@ export function saveDailyResult({ difficulty, date, moves, elapsedMs, strip }) {
   const result = { moves, elapsedMs, strip };
   if (!validDate(date) || !validResult(result, difficulty)) return;
   const record = todayRecord(date);
-  if (['done', 'forfeited'].includes(record[difficulty]?.status)) return;
+  if (record[difficulty]?.status === 'done') return;
   record[difficulty] = { status: 'done', ...result };
   writeDailyRecord(record);
   const stats = loadDailyStats(difficulty);
@@ -260,7 +236,7 @@ export function formatResult({ date, difficulty, moves, elapsedMs, strip }) {
   const seconds = Math.floor(elapsedMs / 1000);
   const time = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   const rows = strip.match(/.{1,10}/g) ?? [];
-  return `Memory · ${formatDay(date)} · ${difficulty === 'hard' ? 'Hard' : 'Easy'}\n${moves} moves · ${time}\n${rows.map(row => [...row].map(move => move === 'm' ? '✅' : '❌').join('')).join('\n')}`;
+  return `${formatDay(date)} · ${difficulty === 'hard' ? 'Hard' : 'Easy'}\n${moves} moves · ${time}\n${rows.map(row => [...row].map(move => move === 'm' ? '✅' : '❌').join('')).join('\n')}`;
 }
 
 export function formatDay(date) {
